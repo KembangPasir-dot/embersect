@@ -21,15 +21,17 @@
       position: relative;
       width: 1280px;
       height: 720px;
-      box-shadow: 0 0 40px rgba(255, 122, 26, 0.25);
+      box-shadow: 0 0 50px rgba(255, 122, 26, 0.3), inset 0 0 30px rgba(8, 12, 28, 0.5);
       background: #0b1026;
-      border: 2px solid #2f3868;
+      border: 2px solid #ffd700;
+      border-radius: 4px;
     }
     canvas {
       display: block;
       width: 1280px;
       height: 720px;
     }
+    /* Dense Lanternkeep HUD Top Bar */
     #hud {
       position: absolute;
       top: 10px;
@@ -39,33 +41,124 @@
       justify-content: space-between;
       align-items: center;
       pointer-events: none;
-      font-size: 16px;
-      text-shadow: 0 0 8px rgba(255, 179, 71, 0.6);
+      font-size: 14px;
+      text-shadow: 0 0 6px rgba(255, 179, 71, 0.7);
+      background: rgba(8, 12, 28, 0.82);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      padding: 6px 14px;
+      border-radius: 3px;
     }
     .hud-group {
       display: flex;
-      gap: 18px;
+      gap: 16px;
+      align-items: center;
     }
     .hud-item span {
       color: #ffffff;
       font-weight: bold;
     }
+    .altar-bar-wrap {
+      display: inline-block;
+      width: 90px;
+      height: 10px;
+      background: rgba(20, 25, 50, 0.9);
+      border: 1px solid #ffd700;
+      border-radius: 2px;
+      overflow: hidden;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+    #altar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff7a1a, #ffd700);
+      transition: width 0.1s linear;
+    }
+
+    /* Left Incoming Queue Panel */
+    #hud-left {
+      position: absolute;
+      top: 60px;
+      left: 15px;
+      width: 210px;
+      background: rgba(8, 12, 28, 0.85);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      padding: 8px 10px;
+      pointer-events: none;
+      font-size: 12px;
+      border-radius: 3px;
+    }
+    .panel-title {
+      font-family: Georgia, serif;
+      color: #ffd700;
+      font-weight: bold;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+      padding-bottom: 3px;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    /* Right Relics & Blessings Panel */
+    #hud-right {
+      position: absolute;
+      top: 60px;
+      right: 15px;
+      width: 220px;
+      background: rgba(8, 12, 28, 0.85);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      padding: 8px 10px;
+      pointer-events: none;
+      font-size: 12px;
+      border-radius: 3px;
+    }
+
+    /* Bottom Control Bar */
+    #hud-bottom {
+      position: absolute;
+      bottom: 10px;
+      left: 15px;
+      right: 15px;
+      background: rgba(8, 12, 28, 0.88);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      pointer-events: none;
+      font-size: 11px;
+      color: #e2ecff;
+      border-radius: 3px;
+    }
+    .key-badge {
+      background: rgba(255, 215, 0, 0.15);
+      border: 1px solid #ffd700;
+      color: #ffd700;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-family: monospace;
+      font-weight: bold;
+      margin-right: 2px;
+    }
+
     #boss-bar-container {
       position: absolute;
-      bottom: 15px;
+      bottom: 45px;
       left: 340px;
       width: 600px;
       height: 16px;
-      background: rgba(11, 16, 38, 0.85);
-      border: 2px solid #ba55d3;
+      background: rgba(11, 16, 38, 0.9);
+      border: 2px solid #ffd700;
       border-radius: 4px;
       display: none;
       overflow: hidden;
+      box-shadow: 0 0 15px rgba(186, 85, 211, 0.5);
     }
     #boss-bar {
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, #ba55d3, #ff7a1a);
+      background: linear-gradient(90deg, #ba55d3, #ff7a1a, #ffd700);
       transition: width 0.1s linear;
     }
   </style>
@@ -73,23 +166,63 @@
 <body>
   <div id="game-container">
     <canvas id="game" width="1280" height="720"></canvas>
+    
+    <!-- Top HUD Bar -->
     <div id="hud">
       <div class="hud-group">
         <div class="hud-item">NIGHT: <span id="night">1</span>/10</div>
         <div class="hud-item">WAVE: <span id="wave">1</span></div>
         <div class="hud-item">SPIRIT STONES: <span id="stones">120</span></div>
-        <div class="hud-item">FORMATION: <span id="formation-level">1</span></div>
+        <div class="hud-item">FORM: <span id="formation-level">1</span></div>
+      </div>
+      <div class="hud-group" style="font-family: Georgia, serif; color: #ffd700; font-weight: bold; letter-spacing: 1px;">
+        ✦ EMBERSECT SECT TRIALS ✦
       </div>
       <div class="hud-group">
-        <div class="hud-item">ALTAR: <span id="altar">20</span>/20</div>
+        <div class="hud-item">ALTAR: <span id="altar">20</span>/20<span class="altar-bar-wrap"><div id="altar-fill"></div></span></div>
         <div class="hud-item">SCORE: <span id="score">0</span></div>
       </div>
     </div>
+
+    <!-- Left Incoming Queue Panel -->
+    <div id="hud-left">
+      <div class="panel-title">INCOMING THREATS</div>
+      <div id="queue-content" style="color: #e2ecff; line-height: 1.5;">
+        <div>👻 Spirits: <span id="q-spirits" style="color: #ba55d3;">0</span></div>
+        <div>🐍 Snakes: <span id="q-snakes" style="color: #2ecc71;">0</span></div>
+        <div>🦊 Foxes: <span id="q-foxes" style="color: #ff7a1a;">0</span></div>
+        <div style="font-size: 11px; color: #ffd700; margin-top: 4px; border-top: 1px dashed rgba(255,215,0,0.3); padding-top: 2px;">Status: <span id="q-status">Peaceful</span></div>
+      </div>
+    </div>
+
+    <!-- Right Relics & Blessings Panel -->
+    <div id="hud-right">
+      <div class="panel-title">RELICS & REALMS</div>
+      <div id="relics-content" style="color: #e2ecff; font-size: 11px; line-height: 1.4; max-height: 90px; overflow-y: hidden;">
+        <div style="color: #ffd700; font-weight: bold;">Manuals Owned:</div>
+        <div id="relic-list" style="color: #7fd4ff;">— None acquired —</div>
+        <div style="color: #ffd700; font-weight: bold; margin-top: 4px;">Highest Realm:</div>
+        <div id="realm-highlight" style="color: #50fa7b;">Qi Refining (炼)</div>
+      </div>
+    </div>
+
+    <!-- Bottom Control Bar -->
+    <div id="hud-bottom">
+      <div><span class="key-badge">1</span>Sword (50)</div>
+      <div><span class="key-badge">2</span>Talisman (30)</div>
+      <div><span class="key-badge">3</span>Keeper (40)</div>
+      <div><span class="key-badge">G</span>Expand</div>
+      <div><span class="key-badge">F</span>Breakthrough</div>
+      <div><span class="key-badge">Space</span>Wave</div>
+      <div><span class="key-badge">P</span>Pause</div>
+      <div><span class="key-badge">M</span>Mute</div>
+    </div>
+
     <div id="boss-bar-container">
       <div id="boss-bar"></div>
     </div>
   </div>
-  <div style="margin-top: 8px; font-size: 13px; color: #7fd4ff; text-align: center;">Click anywhere to enable sound (Press M to mute/unmute)</div>
+  <div style="margin-top: 6px; font-size: 12px; color: #7fd4ff; text-align: center; font-family: Georgia, serif;">Click anywhere to enable sound (Press M to mute/unmute)</div>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

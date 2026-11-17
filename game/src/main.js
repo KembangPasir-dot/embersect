@@ -57,6 +57,10 @@ if (shotParam) {
 
     recomputeSynergies(world);
 
+    // Staging only: show owned manuals in the right HUD panel (display only —
+    // no apply(), so no gameplay bonuses).
+    world.ownedRelics = ['sword_scripture', 'spirit_gathering'];
+
     // Flood the path: late cluster near the formation (in sword range, so
     // combat is live) plus a mid-path stream. High HP + slow speeds so the
     // horde survives the pre-sim and the live seconds after load.
@@ -129,6 +133,10 @@ if (shotParam) {
 
     recomputeSynergies(world);
 
+    // Staging only: show owned manuals in the right HUD panel (display only —
+    // no apply(), so no gameplay bonuses).
+    world.ownedRelics = ['fox_slaying', 'guardian_manual'];
+
     // Boss staged ON the final approach (dist 1650 -> x~830, y 360), right
     // at the formation edge next to the cultivators, phase 2 (60% HP).
     const bossObj = createBoss(10);
@@ -169,6 +177,8 @@ if (shotParam) {
     world.kills = 247;
     world.bestScore = 8650;
     world.newBest = true;
+    // Staging only: show owned manuals in the right HUD panel (display only).
+    world.ownedRelics = ['fox_slaying', 'guardian_manual'];
   }
 }
 
@@ -280,6 +290,62 @@ function gameLoop(timestamp) {
   document.getElementById('altar').textContent = world.altarHp;
   document.getElementById('score').textContent = world.score;
   document.getElementById('formation-level').textContent = world.formationLevel;
+
+  const altarFill = document.getElementById('altar-fill');
+  if (altarFill) {
+    const altarPct = Math.max(0, Math.min(100, (world.altarHp / CONFIG.altarMaxHp) * 100));
+    altarFill.style.width = altarPct + '%';
+  }
+
+  let spiritCount = 0;
+  let snakeCount = 0;
+  let foxCount = 0;
+  world.demons.forEach(d => {
+    if (d.type === 'snake') snakeCount++;
+    else if (d.type === 'fox' || d.type === 'fox_boss') foxCount++;
+    else spiritCount++;
+  });
+  const qSpirits = document.getElementById('q-spirits');
+  const qSnakes = document.getElementById('q-snakes');
+  const qFoxes = document.getElementById('q-foxes');
+  const qStatus = document.getElementById('q-status');
+  if (qSpirits) qSpirits.textContent = spiritCount;
+  if (qSnakes) qSnakes.textContent = snakeCount;
+  if (qFoxes) qFoxes.textContent = foxCount;
+  if (qStatus) {
+    if (world.state === 'playing') {
+      qStatus.textContent = world.bossActive ? '⚠️ BOSS INCOMING' : (world.demons.length > 0 ? '⚔️ Combat Active' : 'Wave Cleared');
+      qStatus.style.color = world.bossActive ? '#ff4a4a' : '#50fa7b';
+    } else if (world.state === 'build') {
+      qStatus.textContent = `Night ${world.currentNight} Build Phase`;
+      qStatus.style.color = '#ffd700';
+    } else {
+      qStatus.textContent = world.state.toUpperCase();
+      qStatus.style.color = '#7fd4ff';
+    }
+  }
+
+  const relicListEl = document.getElementById('relic-list');
+  if (relicListEl) {
+    if (world.ownedRelics && world.ownedRelics.length > 0) {
+      relicListEl.innerHTML = world.ownedRelics.map(id => {
+        const rName = id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        return `• ${rName}`;
+      }).join('<br>');
+    } else {
+      relicListEl.textContent = '— None acquired —';
+    }
+  }
+
+  const realmHighlightEl = document.getElementById('realm-highlight');
+  if (realmHighlightEl) {
+    let highestLevel = 0;
+    world.cultivators.forEach(c => {
+      if (c.level > highestLevel) highestLevel = c.level;
+    });
+    const realmObj = CONFIG.realms[highestLevel] || CONFIG.realms[0];
+    realmHighlightEl.textContent = `${realmObj.name} (${realmObj.badge})`;
+  }
 
   const bossBarContainer = document.getElementById('boss-bar-container');
   const bossBar = document.getElementById('boss-bar');

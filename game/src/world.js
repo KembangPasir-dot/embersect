@@ -234,6 +234,37 @@ export function updateWorld(world, dt, input) {
     world.screenShake -= dt;
   }
 
+  // Ambient formation embers & altar sparks (visual only, capped counts)
+  if (world.rng() < 0.35 && world.particles.filter(p => p.isEmber).length < 35) {
+    const angle = world.rng() * Math.PI * 2;
+    const rad = world.rng() * getFormationRadius(world);
+    const ex = HEARTH_POS.x + Math.cos(angle) * rad;
+    const ey = HEARTH_POS.y + Math.sin(angle) * rad;
+    world.particles.push({
+      x: ex, y: ey,
+      vx: (world.rng() - 0.5) * 12,
+      vy: -25 - world.rng() * 25,
+      size: 1.5 + world.rng() * 2,
+      life: 1.5 + world.rng() * 1.5,
+      maxLife: 3.0,
+      color: world.rng() > 0.4 ? '#ffd700' : '#ff7a1a',
+      isEmber: true
+    });
+  }
+  if (world.rng() < 0.3 && world.particles.filter(p => p.isAltarSpark).length < 15) {
+    world.particles.push({
+      x: HEARTH_POS.x + (world.rng() - 0.5) * 35,
+      y: HEARTH_POS.y + (world.rng() - 0.5) * 20,
+      vx: (world.rng() - 0.5) * 18,
+      vy: -35 - world.rng() * 30,
+      size: 1 + world.rng() * 2,
+      life: 0.8 + world.rng() * 0.8,
+      maxLife: 1.6,
+      color: '#ffb347',
+      isAltarSpark: true
+    });
+  }
+
   // Update floating numbers
   for (let i = world.floatingNumbers.length - 1; i >= 0; i--) {
     const fn = world.floatingNumbers[i];
@@ -246,8 +277,12 @@ export function updateWorld(world, dt, input) {
   for (let i = world.particles.length - 1; i >= 0; i--) {
     const p = world.particles[i];
     p.life -= dt;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
+    if (p.isShockwave) {
+      p.radius += (p.maxRadius - p.radius) * (dt * 10);
+    } else {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
     if (p.life <= 0) world.particles.splice(i, 1);
   }
 
@@ -489,6 +524,15 @@ function handleDemonDeath(world, demon) {
 
     const burstSize = demon.type === 'fox' || demon.boss ? 14 : 8;
     spawnParticleBurst(world, demon.x, demon.y, demon.type === 'fox' || demon.boss ? '#ffd700' : '#ba55d3', burstSize);
+    world.particles.push({
+      x: demon.x, y: demon.y,
+      radius: 6,
+      maxRadius: demon.boss || demon.type === 'fox' ? 65 : 40,
+      life: 0.45,
+      maxLife: 0.45,
+      color: demon.boss || demon.type === 'fox' ? '#ffd700' : '#ba55d3',
+      isShockwave: true
+    });
     if (demon.type === 'fox' || demon.boss) {
       world.screenShake = 0.2;
     }

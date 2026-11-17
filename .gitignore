@@ -1,0 +1,4 @@
+out/
+prompt-*.txt
+run-gemini.sh
+system-prompt-withheld.txt
